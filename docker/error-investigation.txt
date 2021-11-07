@@ -1,0 +1,18 @@
+Error:
+Caused by: org.apache.kafka.common.errors.SslAuthenticationException: SSL handshake failed
+
+Caused by: javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException:
+PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+
+root certificate should be provided by another CA on top of your CA ( this is called as the certificate chain )
+
+DEBUG Error:
+https://confluence.atlassian.com/kb/unable-to-connect-to-ssl-services-due-to-pkix-path-building-failed-error-779355358.html  => this clearly states that the certificates used to connect to kafka are the wrong ones.
+
+Useful:
+[1] How to generate a certificate authority ? https://priyalwalpita.medium.com/create-your-own-certificate-authority-47f49d0ba086
+[2]
+[3]
+[4]
+[5]
+

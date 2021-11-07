@@ -1,0 +1,123 @@
+version: '2'
+services:
+  ####################################################################################################################
+  #                                  ZOOKEEPERS
+  ####################################################################################################################
+  zoo1:
+    image: zookeeper
+    restart: always
+    hostname: zoo1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+  zoo2:
+    image: zookeeper
+    restart: always
+    hostname: zoo2
+    ports:
+      - "2182:2181"
+    environment:
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+
+  zoo3:
+    image: zookeeper
+    restart: always
+    hostname: zoo3
+    ports:
+      - "2183:2181"
+    environment:
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+
+  ####################################################################################################################
+  #                                  KAFKA BROKERS
+  ####################################################################################################################
+  broker1:
+    image: my_kafka:latest
+    restart: always
+    hostname: broker1
+    #       command: ["sleep", "6000s"]
+    ports:
+      - "9091:9092"
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: ${CLUSTER_IP}
+      KAFKA_ADVERTISED_PORT: 9091
+      KAFKA_HOST_NAME: broker1
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_LISTENERS: SSL://broker1:9092
+      KAFKA_ADVERTISED_LISTENERS: SSL://${CLUSTER_IP}:9091
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      KAFKA_INTER_BROKER_LISTENER_NAME: SSL
+    volumes:
+      - /tmp/kafka/certificates/kafka.truststore:/certificates/kafka.truststore
+      - /tmp/kafka/certificates/kafka.keystore:/certificates/kafka.keystore
+  broker2:
+    image: my_kafka:latest
+    restart: always
+    #  command: ["sleep", "6000s"]
+    hostname: broker2
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ADVERTISED_HOST_NAME: ${CLUSTER_IP}
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_HOST_NAME: broker2
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_LISTENERS: SSL://broker2:9092
+      KAFKA_ADVERTISED_LISTENERS: SSL://${CLUSTER_IP}:9092
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      KAFKA_INTER_BROKER_LISTENER_NAME: SSL
+    volumes:
+      - /tmp/kafka/certificates/kafka.truststore:/certificates/kafka.truststore
+      - /tmp/kafka/certificates/kafka.keystore:/certificates/kafka.keystore
+  broker3:
+    image: my_kafka:latest
+    restart: always
+    # command: ["sleep", "6000s"]
+    hostname: broker3
+    ports:
+      - "9093:9092"
+    depends_on:
+      - zoo1
+      - zoo2
+      - zoo3
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ADVERTISED_HOST_NAME: ${CLUSTER_IP}
+      KAFKA_ADVERTISED_PORT: 9093
+      KAFKA_HOST_NAME: broker3
+      KAFKA_ZOOKEEPER_CONNECT: zoo1:2181,zoo2:2181,zoo3:2181
+      KAFKA_LISTENERS: SSL://broker3:9092
+      KAFKA_ADVERTISED_LISTENERS: SSL://${CLUSTER_IP}:9093
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      KAFKA_INTER_BROKER_LISTENER_NAME: SSL
+    logging:
+      options:
+        max-file: "5"
+        max-size: "10m"
+    volumes:
+      - /tmp/kafka/certificates/kafka.truststore:/certificates/kafka.truststore
+      - /tmp/kafka/certificates/kafka.keystore:/certificates/kafka.keystore
+  kafka-manager:
+    image: sheepkiller/kafka-manager
+    environment:
+      ZK_HOSTS: zoo1:2181,zoo2:2181,zoo3:2181
+    logging:
+      options:
+        max-file: "5"
+        max-size: "10m"
+    ports:
+      - "9000:9000"
